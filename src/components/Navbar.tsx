@@ -1,64 +1,105 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Menu, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import logoImage from "@/assets/logo_image.png";
+import ThemeToggle from "@/components/ThemeToggle";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const navLinks = [
-  { label: "HOME", path: "/" },
-  { label: "CATEGORY", path: "/category" },
-  { label: "BRANDS", path: "/brands" },
-  { label: "OFFERS", path: "/offers" },
+  { label: "Home", path: "/" },
+  { label: "Collection", path: "/category" },
+  { label: "Brands", path: "/brands" },
+  { label: "Offers", path: "/offers" },
 ];
 
 const Navbar = () => {
   const { setIsOpen, itemCount } = useCart();
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 flex justify-center pt-5 pb-3 transition-colors duration-300 ${isHome ? "" : "bg-card shadow-sm"}`}>
-      <div className="w-[90%] max-w-[1200px] flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 no-underline">
-          <div className="w-[50px] h-[50px] rounded-full overflow-hidden shadow-md border border-border flex items-center justify-center bg-card">
-            <img src={logoImage} alt="Dias Kitchen" className="w-full h-full object-cover" />
-          </div>
-          <span className={`font-display text-xl font-semibold tracking-wide hidden sm:block ${isHome ? "text-primary-foreground" : "text-foreground"}`}>
-            Dias Kitchen
-          </span>
-        </Link>
-
-        {/* Nav Links */}
-        <div className="hidden md:flex glass-surface rounded-full px-2 py-1 shadow-md">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`no-underline font-body text-sm font-medium tracking-wide px-5 py-2.5 rounded-full transition-all duration-300 ${
-                location.pathname === link.path
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:bg-primary hover:text-primary-foreground"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
-
-        {/* Cart */}
-        <button
-          onClick={() => setIsOpen(true)}
-          className="relative w-[50px] h-[50px] rounded-full bg-card flex items-center justify-center shadow-md border border-border cursor-pointer hover:scale-105 transition-transform"
-        >
-          <ShoppingBag size={20} className="text-foreground" />
-          {itemCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-accent text-accent-foreground text-[11px] font-semibold flex items-center justify-center">
-              {itemCount}
+    <>
+      <nav className="fixed top-0 left-0 w-full z-50 glass-surface">
+        <div className="max-w-[1320px] mx-auto px-6 flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2.5 no-underline">
+            <span className="font-display text-lg font-semibold tracking-tight text-foreground">
+              Dias Kitchen
             </span>
-          )}
-        </button>
-      </div>
-    </nav>
+          </Link>
+
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`no-underline font-body text-[13px] font-medium tracking-tight px-4 py-2 rounded-full transition-all duration-200 ${
+                  location.pathname === link.path
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => setIsOpen(true)}
+              className="relative w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center border border-border cursor-pointer hover:scale-105 transition-transform"
+            >
+              <ShoppingBag size={17} className="text-foreground" />
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] rounded-full bg-accent text-accent-foreground text-[10px] font-semibold flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center border border-border cursor-pointer"
+            >
+              {mobileOpen ? <X size={17} /> : <Menu size={17} />}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="fixed top-16 left-0 w-full z-40 glass-surface border-t border-border md:hidden"
+          >
+            <div className="flex flex-col p-4 gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setMobileOpen(false)}
+                  className={`no-underline font-body text-sm font-medium px-4 py-3 rounded-lg transition-colors ${
+                    location.pathname === link.path
+                      ? "bg-foreground text-background"
+                      : "text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { products } from "@/data/products";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingBag, Heart } from "lucide-react";
@@ -24,23 +25,33 @@ const ProductDetail = () => {
     : variant.price;
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-16">
       <div className="flex flex-col md:flex-row">
         {/* Image */}
-        <section className="flex-[1.2] bg-secondary flex items-center justify-center md:sticky md:top-0 md:h-screen p-8">
-          <img src={product.image} alt={product.name} className="max-w-[80%] h-auto" />
-        </section>
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex-[1.2] bg-secondary flex items-center justify-center md:sticky md:top-0 md:h-screen p-12"
+        >
+          <img src={product.image} alt={product.name} className="max-w-[75%] h-auto" />
+        </motion.section>
 
         {/* Info */}
-        <section className="flex-1 p-8 md:p-16 md:pt-20 overflow-y-auto">
-          <p className="font-body text-[11px] uppercase tracking-[2px] text-muted-foreground mb-5">
-            {product.category} / {product.subcategory}
+        <motion.section
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="flex-1 p-8 md:p-16 md:pt-24 overflow-y-auto"
+        >
+          <p className="font-body text-[11px] uppercase tracking-[2px] text-muted-foreground mb-6">
+            {product.brand}
           </p>
 
-          <h1 className="font-display text-4xl leading-tight mb-4">{product.name}</h1>
+          <h1 className="font-display text-3xl md:text-4xl leading-tight mb-5 tracking-tight">{product.name}</h1>
 
           <div className="flex items-center gap-3 mb-8">
-            <span className="font-body text-2xl text-gold font-medium">₹{displayPrice.toLocaleString("en-IN")}</span>
+            <span className="font-body text-2xl text-foreground font-semibold tracking-tight">₹{displayPrice.toLocaleString("en-IN")}</span>
             {product.onOffer && (
               <>
                 <span className="font-body text-lg text-muted-foreground line-through">₹{variant.price.toLocaleString("en-IN")}</span>
@@ -51,21 +62,21 @@ const ProductDetail = () => {
             )}
           </div>
 
-          <p className="font-body text-[15px] leading-relaxed text-muted-foreground mb-10">{product.description}</p>
+          <p className="font-body text-[14px] leading-relaxed text-muted-foreground mb-10">{product.description}</p>
 
           {/* Variant Selector */}
           {product.variants.length > 1 && (
             <div className="mb-8">
-              <p className="font-body text-xs uppercase tracking-widest text-muted-foreground mb-3">Size</p>
+              <p className="font-body text-[11px] uppercase tracking-[2px] text-muted-foreground mb-3">Size</p>
               <div className="flex gap-2">
                 {product.variants.map((v, i) => (
                   <button
                     key={v.size}
                     onClick={() => setSelectedVariant(i)}
-                    className={`px-4 py-2 border rounded font-body text-sm cursor-pointer transition-colors ${
+                    className={`px-5 py-2.5 border rounded-xl font-body text-[13px] cursor-pointer transition-all duration-200 ${
                       i === selectedVariant
-                        ? "border-foreground bg-primary text-primary-foreground"
-                        : "border-border hover:border-foreground"
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border hover:border-foreground/40"
                     }`}
                   >
                     {v.size}
@@ -76,41 +87,39 @@ const ProductDetail = () => {
           )}
 
           {/* Specs */}
-          <table className="w-full mb-10 font-body">
-            <tbody>
-              {[
-                ["Material", product.material],
-                ["Compatibility", product.compatibility],
-                ["Warranty", product.warranty],
-                ["Stock", variant.stock > 0 ? `${variant.stock} units` : "Out of stock"],
-              ].map(([label, value]) => (
-                <tr key={label} className="border-b border-border">
-                  <td className="py-4 text-sm font-semibold uppercase tracking-wider w-[40%]">{label}</td>
-                  <td className="py-4 text-sm text-muted-foreground">{value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="mb-10 space-y-0">
+            {[
+              ["Material", product.material],
+              ["Compatibility", product.compatibility],
+              ["Warranty", product.warranty],
+              ["Stock", variant.stock > 0 ? `${variant.stock} units` : "Out of stock"],
+            ].map(([label, value]) => (
+              <div key={label} className="flex justify-between py-3.5 border-b border-border">
+                <span className="font-body text-[12px] font-semibold uppercase tracking-[1px] text-muted-foreground">{label}</span>
+                <span className="font-body text-[13px] text-foreground">{value}</span>
+              </div>
+            ))}
+          </div>
 
           {/* Actions */}
           <div className="flex gap-3">
             <button
               onClick={() => variant.stock > 0 && addItem(product, variant.size, displayPrice)}
               disabled={variant.stock === 0}
-              className="flex-[2] bg-primary text-primary-foreground py-5 font-body text-xs tracking-[2px] uppercase font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-[2] bg-foreground text-background py-4 rounded-xl font-body text-[12px] tracking-[1.5px] uppercase font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ShoppingBag size={16} />
               {variant.stock > 0 ? "Add to Cart" : "Out of Stock"}
             </button>
-            <button className="flex-[0.3] border border-border bg-card flex items-center justify-center cursor-pointer hover:bg-secondary transition-colors">
-              <Heart size={18} />
+            <button className="w-12 h-12 border border-border bg-card rounded-xl flex items-center justify-center cursor-pointer hover:bg-secondary transition-colors">
+              <Heart size={18} className="text-foreground" />
             </button>
           </div>
 
-          <Link to="/category" className="block mt-8 text-center font-body text-xs text-muted-foreground hover:text-foreground no-underline">
+          <Link to="/category" className="block mt-10 text-center font-body text-[12px] text-muted-foreground hover:text-foreground no-underline transition-colors">
             ← Back to Collection
           </Link>
-        </section>
+        </motion.section>
       </div>
     </div>
   );
