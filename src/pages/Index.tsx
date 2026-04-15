@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import heroImage from "@/assets/hero-kitchen.jpg";
-import { products } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { MessageCircle } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useProducts, useBrands } from "@/hooks/use-products";
 
 const Index = () => {
-  const featured = products.slice(0, 6);
   const { itemCount, setIsOpen, total } = useCart();
+  const { data: products = [], isLoading } = useProducts();
+  const { data: brands = [] } = useBrands();
+  const featured = products.slice(0, 6);
 
   return (
     <div>
@@ -32,16 +34,10 @@ const Index = () => {
             Premium utensils, crockery, and kitchenware selected for elegance, durability, and joy.
           </p>
           <div className="flex gap-3 flex-wrap">
-            <Link
-              to="/category"
-              className="inline-block px-8 py-3.5 bg-white text-black font-body text-[12px] font-medium tracking-[1px] uppercase no-underline rounded-full hover:bg-white/90 transition-all duration-200"
-            >
+            <Link to="/category" className="inline-block px-8 py-3.5 bg-white text-black font-body text-[12px] font-medium tracking-[1px] uppercase no-underline rounded-full hover:bg-white/90 transition-all duration-200">
               Explore Collection
             </Link>
-            <Link
-              to="/brands"
-              className="inline-block px-8 py-3.5 border border-white/40 text-white font-body text-[12px] font-medium tracking-[1px] uppercase no-underline rounded-full hover:bg-white/10 transition-all duration-200"
-            >
+            <Link to="/brands" className="inline-block px-8 py-3.5 border border-white/40 text-white font-body text-[12px] font-medium tracking-[1px] uppercase no-underline rounded-full hover:bg-white/10 transition-all duration-200">
               Our Brands
             </Link>
           </div>
@@ -50,40 +46,36 @@ const Index = () => {
 
       {/* Bento Grid — Featured Products */}
       <section className="max-w-[1320px] mx-auto px-6 py-24">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="flex items-end justify-between mb-14"
-        >
+        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="flex items-end justify-between mb-14">
           <div>
             <p className="text-[11px] uppercase tracking-[3px] text-muted-foreground font-body mb-2">Curated Selection</p>
             <h2 className="font-display text-3xl tracking-tight">Featured</h2>
           </div>
-          <Link to="/category" className="font-body text-[13px] text-muted-foreground hover:text-foreground no-underline transition-colors">
-            View All →
-          </Link>
+          <Link to="/category" className="font-body text-[13px] text-muted-foreground hover:text-foreground no-underline transition-colors">View All →</Link>
         </motion.div>
 
-        {/* Bento Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 auto-rows-auto">
-          {featured.map((p, i) => (
-            <div key={p.id} className={i === 0 || i === 3 ? "md:row-span-2" : ""}>
-              <ProductCard product={p} featured={i === 0 || i === 3} />
-            </div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className={`bg-secondary rounded-2xl animate-pulse ${i === 0 || i === 3 ? "aspect-[3/4] md:row-span-2" : "aspect-square"}`} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 auto-rows-auto">
+            {featured.map((p, i) => (
+              <div key={p.id} className={i === 0 || i === 3 ? "md:row-span-2" : ""}>
+                <ProductCard product={p} featured={i === 0 || i === 3} />
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Brand Marquee */}
       <section className="border-y border-border py-12">
         <div className="max-w-[1320px] mx-auto px-6 flex flex-wrap justify-center gap-12 md:gap-20">
-          {["Prestige", "Hawkins", "Butterfly", "Pigeon"].map((b) => (
-            <Link
-              key={b}
-              to={`/brands/${b.toLowerCase()}`}
-              className="font-display text-2xl md:text-3xl text-muted-foreground/40 hover:text-foreground transition-colors duration-300 no-underline tracking-tight"
-            >
+          {brands.map((b) => (
+            <Link key={b} to={`/brands/${b.toLowerCase()}`} className="font-display text-2xl md:text-3xl text-muted-foreground/40 hover:text-foreground transition-colors duration-300 no-underline tracking-tight">
               {b}
             </Link>
           ))}
@@ -118,19 +110,10 @@ const Index = () => {
 
       {/* Mobile Floating WhatsApp FAB */}
       {itemCount > 0 && (
-        <motion.div
-          initial={{ y: 80 }}
-          animate={{ y: 0 }}
-          className="fixed bottom-6 left-4 right-4 z-40 md:hidden"
-        >
-          <button
-            onClick={() => setIsOpen(true)}
-            className="w-full glass-surface rounded-2xl px-5 py-4 flex items-center justify-between cursor-pointer shadow-lg border border-border"
-          >
+        <motion.div initial={{ y: 80 }} animate={{ y: 0 }} className="fixed bottom-6 left-4 right-4 z-40 md:hidden">
+          <button onClick={() => setIsOpen(true)} className="w-full glass-surface rounded-2xl px-5 py-4 flex items-center justify-between cursor-pointer shadow-lg border border-border">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center">
-                <MessageCircle size={16} />
-              </div>
+              <div className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center"><MessageCircle size={16} /></div>
               <div className="text-left">
                 <p className="font-body text-[12px] font-semibold text-foreground">{itemCount} item{itemCount > 1 ? "s" : ""} in cart</p>
                 <p className="font-body text-[11px] text-muted-foreground">₹{total.toLocaleString("en-IN")}</p>

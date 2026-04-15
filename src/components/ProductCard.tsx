@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import type { Product } from "@/data/products";
+import type { Product } from "@/lib/data-provider";
 import { useCart } from "@/contexts/CartContext";
 
 interface ProductCardProps {
@@ -11,9 +11,7 @@ interface ProductCardProps {
 const ProductCard = ({ product, featured = false }: ProductCardProps) => {
   const { addItem } = useCart();
   const baseVariant = product.variants[0];
-  const displayPrice = product.onOffer
-    ? Math.round(baseVariant.price * (1 - product.discountPercent / 100))
-    : baseVariant.price;
+  const displayPrice = product.onOffer ? product.discountPrice : product.price;
 
   return (
     <motion.div
@@ -57,7 +55,7 @@ const ProductCard = ({ product, featured = false }: ProductCardProps) => {
         <div className="flex items-center gap-2 mt-2">
           <span className="font-body text-sm text-foreground font-medium">₹{displayPrice.toLocaleString("en-IN")}</span>
           {product.onOffer && (
-            <span className="font-body text-xs text-muted-foreground line-through">₹{baseVariant.price.toLocaleString("en-IN")}</span>
+            <span className="font-body text-xs text-muted-foreground line-through">₹{product.price.toLocaleString("en-IN")}</span>
           )}
         </div>
       </div>

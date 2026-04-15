@@ -10,6 +10,7 @@ const navLinks = [
   { label: "Collection", path: "/category" },
   { label: "Brands", path: "/brands" },
   { label: "Offers", path: "/offers" },
+  { label: "Search", path: "/search" },
 ];
 
 const Navbar = () => {

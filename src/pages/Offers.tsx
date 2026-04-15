@@ -1,19 +1,14 @@
 import { motion } from "framer-motion";
-import { products } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
+import { useOfferProducts } from "@/hooks/use-products";
 
 const Offers = () => {
-  const offerProducts = products.filter((p) => p.onOffer);
+  const { data: offerProducts = [], isLoading } = useOfferProducts();
 
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="max-w-[1320px] mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-20"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-20">
           <p className="text-[11px] uppercase tracking-[3px] text-muted-foreground font-body mb-2">Limited Time</p>
           <h1 className="font-display text-4xl tracking-tight mb-4">Special Offers</h1>
           <p className="font-body text-[14px] text-muted-foreground max-w-md mx-auto">
@@ -21,7 +16,11 @@ const Offers = () => {
           </p>
         </motion.div>
 
-        {offerProducts.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+            {[...Array(3)].map((_, i) => <div key={i} className="bg-secondary rounded-2xl aspect-square animate-pulse" />)}
+          </div>
+        ) : offerProducts.length === 0 ? (
           <p className="text-muted-foreground font-body text-sm py-20 text-center">No offers available at the moment.</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">

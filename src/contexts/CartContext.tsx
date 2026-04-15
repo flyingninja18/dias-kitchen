@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import type { Product } from "@/data/products";
+import type { Product } from "@/lib/data-provider";
 
 export interface CartItem {
   product: Product;
@@ -18,6 +18,9 @@ interface CartContextType {
   clearCart: () => void;
   total: number;
   itemCount: number;
+  orderId: string;
+  lastWhatsAppTime: number;
+  setLastWhatsAppTime: (t: number) => void;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -28,9 +31,17 @@ export const useCart = () => {
   return ctx;
 };
 
+function generateOrderId(): string {
+  const ts = Date.now().toString(36).toUpperCase();
+  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `DK-${ts}-${rand}`;
+}
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [orderId] = useState(generateOrderId);
+  const [lastWhatsAppTime, setLastWhatsAppTime] = useState(0);
 
   const addItem = useCallback((product: Product, variant: string, price: number) => {
     setItems((prev) => {
@@ -69,7 +80,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, isOpen, setIsOpen, addItem, removeItem, updateQuantity, clearCart, total, itemCount }}>
+    <CartContext.Provider value={{ items, isOpen, setIsOpen, addItem, removeItem, updateQuantity, clearCart, total, itemCount, orderId, lastWhatsAppTime, setLastWhatsAppTime }}>
       {children}
     </CartContext.Provider>
   );

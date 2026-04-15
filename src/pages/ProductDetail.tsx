@@ -1,15 +1,28 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { products } from "@/data/products";
+import { useProduct } from "@/hooks/use-products";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingBag, Heart } from "lucide-react";
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const product = products.find((p) => p.id === id);
+  const { data: product, isLoading } = useProduct(id);
   const { addItem } = useCart();
   const [selectedVariant, setSelectedVariant] = useState(0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-16 flex flex-col md:flex-row">
+        <div className="flex-[1.2] bg-secondary animate-pulse md:h-screen" />
+        <div className="flex-1 p-8 md:p-16 md:pt-24 space-y-4">
+          <div className="h-4 w-20 bg-secondary rounded animate-pulse" />
+          <div className="h-8 w-2/3 bg-secondary rounded animate-pulse" />
+          <div className="h-6 w-32 bg-secondary rounded animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -27,7 +40,6 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen pt-16">
       <div className="flex flex-col md:flex-row">
-        {/* Image */}
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -37,17 +49,13 @@ const ProductDetail = () => {
           <img src={product.image} alt={product.name} className="max-w-[75%] h-auto" />
         </motion.section>
 
-        {/* Info */}
         <motion.section
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
           className="flex-1 p-8 md:p-16 md:pt-24 overflow-y-auto"
         >
-          <p className="font-body text-[11px] uppercase tracking-[2px] text-muted-foreground mb-6">
-            {product.brand}
-          </p>
-
+          <p className="font-body text-[11px] uppercase tracking-[2px] text-muted-foreground mb-6">{product.brand}</p>
           <h1 className="font-display text-3xl md:text-4xl leading-tight mb-5 tracking-tight">{product.name}</h1>
 
           <div className="flex items-center gap-3 mb-8">
@@ -55,20 +63,17 @@ const ProductDetail = () => {
             {product.onOffer && (
               <>
                 <span className="font-body text-lg text-muted-foreground line-through">₹{variant.price.toLocaleString("en-IN")}</span>
-                <span className="bg-foreground text-background text-[10px] font-body font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full">
-                  –{product.discountPercent}%
-                </span>
+                <span className="bg-foreground text-background text-[10px] font-body font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full">–{product.discountPercent}%</span>
               </>
             )}
           </div>
 
           <p className="font-body text-[14px] leading-relaxed text-muted-foreground mb-10">{product.description}</p>
 
-          {/* Variant Selector */}
           {product.variants.length > 1 && (
             <div className="mb-8">
-              <p className="font-body text-[11px] uppercase tracking-[2px] text-muted-foreground mb-3">Size</p>
-              <div className="flex gap-2">
+              <p className="font-body text-[11px] uppercase tracking-[2px] text-muted-foreground mb-3">Size / Variant</p>
+              <div className="flex gap-2 flex-wrap">
                 {product.variants.map((v, i) => (
                   <button
                     key={v.size}
@@ -86,7 +91,6 @@ const ProductDetail = () => {
             </div>
           )}
 
-          {/* Specs */}
           <div className="mb-10 space-y-0">
             {[
               ["Material", product.material],
@@ -101,7 +105,6 @@ const ProductDetail = () => {
             ))}
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3">
             <button
               onClick={() => variant.stock > 0 && addItem(product, variant.size, displayPrice)}

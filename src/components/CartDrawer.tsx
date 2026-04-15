@@ -2,24 +2,34 @@ import { X, Minus, Plus, MessageCircle } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+import { toast } from "sonner";
+
+const RATE_LIMIT_MS = 30_000; // 30s between WhatsApp triggers
 
 const CartDrawer = () => {
-  const { items, isOpen, setIsOpen, removeItem, updateQuantity, total, clearCart } = useCart();
+  const { items, isOpen, setIsOpen, removeItem, updateQuantity, total, clearCart, orderId, lastWhatsAppTime, setLastWhatsAppTime } = useCart();
   const [specialInstructions, setSpecialInstructions] = useState("");
 
   const handleWhatsAppCheckout = () => {
     if (items.length === 0) return;
 
+    const now = Date.now();
+    if (now - lastWhatsAppTime < RATE_LIMIT_MS) {
+      toast.error(`Please wait ${Math.ceil((RATE_LIMIT_MS - (now - lastWhatsAppTime)) / 1000)}s before sending another order.`);
+      return;
+    }
+
     const itemLines = items.map(
       (item, i) => `${i + 1}. ${item.product.name} (${item.variant}) × ${item.quantity} — ₹${(item.price * item.quantity).toLocaleString("en-IN")}`
     );
 
-    let message = `Hello Dias Kitchen! I'd like to order:\n\n${itemLines.join("\n")}\n\nTotal: ₹${total.toLocaleString("en-IN")}`;
+    let message = `Hello Dias Kitchen!\n\nOrder ID: ${orderId}\n\nI'd like to order:\n${itemLines.join("\n")}\n\nTotal: ₹${total.toLocaleString("en-IN")}`;
     if (specialInstructions.trim()) {
       message += `\n\nSpecial Instructions: ${specialInstructions.trim()}`;
     }
     message += "\n\nPlease confirm availability.";
 
+    setLastWhatsAppTime(now);
     window.open(`https://wa.me/919999999999?text=${encodeURIComponent(message)}`, "_blank");
   };
 
@@ -27,7 +37,6 @@ const CartDrawer = () => {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -36,8 +45,6 @@ const CartDrawer = () => {
             className="fixed inset-0 bg-foreground/15 backdrop-blur-sm z-50"
             onClick={() => setIsOpen(false)}
           />
-
-          {/* Drawer */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -45,15 +52,16 @@ const CartDrawer = () => {
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed top-0 right-0 h-full w-full max-w-[420px] z-50 glass-surface shadow-2xl flex flex-col"
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-              <h2 className="font-display text-lg tracking-tight">Cart</h2>
+              <div>
+                <h2 className="font-display text-lg tracking-tight">Cart</h2>
+                <p className="text-[10px] text-muted-foreground font-body mt-0.5">{orderId}</p>
+              </div>
               <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full hover:bg-secondary flex items-center justify-center transition-colors cursor-pointer">
                 <X size={18} />
               </button>
             </div>
 
-            {/* Items */}
             <div className="flex-1 overflow-y-auto px-6 py-4">
               {items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -80,26 +88,11 @@ const CartDrawer = () => {
                         <p className="text-foreground font-body text-sm font-semibold mt-1">₹{(item.price * item.quantity).toLocaleString("en-IN")}</p>
                         <div className="flex items-center gap-2 mt-2.5">
                           <div className="flex items-center border border-border rounded-lg overflow-hidden">
-                            <button
-                              onClick={() => updateQuantity(item.product.id, item.variant, item.quantity - 1)}
-                              className="w-8 h-8 flex items-center justify-center hover:bg-secondary cursor-pointer transition-colors"
-                            >
-                              <Minus size={12} />
-                            </button>
+                            <button onClick={() => updateQuantity(item.product.id, item.variant, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-secondary cursor-pointer transition-colors"><Minus size={12} /></button>
                             <span className="text-xs font-medium w-8 text-center">{item.quantity}</span>
-                            <button
-                              onClick={() => updateQuantity(item.product.id, item.variant, item.quantity + 1)}
-                              className="w-8 h-8 flex items-center justify-center hover:bg-secondary cursor-pointer transition-colors"
-                            >
-                              <Plus size={12} />
-                            </button>
+                            <button onClick={() => updateQuantity(item.product.id, item.variant, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-secondary cursor-pointer transition-colors"><Plus size={12} /></button>
                           </div>
-                          <button
-                            onClick={() => removeItem(item.product.id, item.variant)}
-                            className="ml-auto text-muted-foreground hover:text-destructive text-[11px] cursor-pointer transition-colors"
-                          >
-                            Remove
-                          </button>
+                          <button onClick={() => removeItem(item.product.id, item.variant)} className="ml-auto text-muted-foreground hover:text-destructive text-[11px] cursor-pointer transition-colors">Remove</button>
                         </div>
                       </div>
                     </motion.div>
@@ -108,7 +101,6 @@ const CartDrawer = () => {
               )}
             </div>
 
-            {/* Footer */}
             {items.length > 0 && (
               <div className="border-t border-border px-6 py-5 space-y-4">
                 <textarea
@@ -122,19 +114,11 @@ const CartDrawer = () => {
                   <span className="font-body text-sm text-muted-foreground">Total</span>
                   <span className="font-display text-xl tracking-tight">₹{total.toLocaleString("en-IN")}</span>
                 </div>
-                <button
-                  onClick={handleWhatsAppCheckout}
-                  className="w-full bg-foreground text-background py-4 rounded-xl font-body text-[12px] font-semibold tracking-[1.5px] uppercase flex items-center justify-center gap-2 hover:opacity-90 transition-opacity cursor-pointer"
-                >
+                <button onClick={handleWhatsAppCheckout} className="w-full bg-foreground text-background py-4 rounded-xl font-body text-[12px] font-semibold tracking-[1.5px] uppercase flex items-center justify-center gap-2 hover:opacity-90 transition-opacity cursor-pointer">
                   <MessageCircle size={15} />
                   Order via WhatsApp
                 </button>
-                <button
-                  onClick={clearCart}
-                  className="w-full text-center text-muted-foreground text-[11px] hover:text-foreground cursor-pointer py-1 transition-colors"
-                >
-                  Clear Cart
-                </button>
+                <button onClick={clearCart} className="w-full text-center text-muted-foreground text-[11px] hover:text-foreground cursor-pointer py-1 transition-colors">Clear Cart</button>
               </div>
             )}
           </motion.div>
