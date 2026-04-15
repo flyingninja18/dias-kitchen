@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Menu, X } from "lucide-react";
+import { ShoppingBag, Menu, X, Search } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useState } from "react";
@@ -10,6 +10,7 @@ const navLinks = [
   { label: "Collection", path: "/category" },
   { label: "Brands", path: "/brands" },
   { label: "Offers", path: "/offers" },
+  { label: "Search", path: "/search" },
 ];
 
 const Navbar = () => {
