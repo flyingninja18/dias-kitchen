@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { useProducts } from "@/hooks/use-products";
 import type { Product } from "@/lib/data-provider";
 
